@@ -1,476 +1,322 @@
-# 🧠 Skullster Economy Bot — Architecture Guide
+# 🧠 Skullster Economy Bot
 
-A structured breakdown of the bot’s cogs, systems, and how everything connects.
+A modular Discord economy + roleplay system built with `discord.py`, featuring a shared-state architecture where multiple systems interact with the same user data.
 
 ---
 
-# 📌 Overview
+## 🚀 Features
 
-This is a modular `discord.py` bot built using **cogs**.
+- 💰 Wallet, debt, and loan systems  
+- 🏦 Savings accounts with interest  
+- 📊 Taxation (manual + bracket-based)  
+- 🛒 Player marketplace and black market  
+- 🎯 Task and progression system  
+- 🎮 Mini-games (e.g. blackjack)  
+- 🍸 Bar ordering + service booking systems  
+- 🧩 Interactive UI (buttons, modals, views)  
+- 🔒 Role systems, moderation tools, and whitelist control  
+
+---
+
+## 📌 Overview
+
+This bot is built using a **cog-based architecture**.
 
 Each cog:
+- Handles a specific feature (economy, banking, tasks, etc.)
+- Reads/writes shared JSON data
+- Registers commands, listeners, or background tasks
 
-* Handles a specific feature (economy, banking, tasks, etc.)
-* Reads/writes shared JSON data
-* Registers commands, listeners, or background tasks
-
-The bot is fundamentally:
-
-> A shared-state economy system where multiple subsystems modify the same user data.
+> All systems in this bot feed into a single shared economy — meaning every action affects the same underlying user state.
 
 ---
 
-# ⚙️ Core Architecture
+## 🧭 How the Bot is Structured
 
-## `bot.py`
+bot.py → core loader
+cogs/
+├── bar_economy.py
+├── channel_guard.py
+├── tasks.py
+├── savings.py
+├── banking.py
+├── taxation.py
+├── bar_menu.py
+├── chamberlain.py
+├── blackjack.py
+├── blackmarket.py
+├── marketplace.py
+├── leaderboard.py
+├── reviews.py
+├── roles.py
+├── help.py
+├── econmute.py
+├── whitelist.py
+├── nya_bully.py
+├── info.py
+└── id_gen.py
 
+
+---
+
+## ⚙️ Core Architecture
+
+### bot.py
 **Role:** Entry point and system controller
 
-### Responsibilities
-
-* Initializes bot (`commands.Bot`)
-* Loads all cogs
-* Handles global errors
-* Syncs slash commands
-* Starts the bot
-
-### Key Concepts
-
-* **Intents** → control what events the bot can receive
-* **COGS list** → modules loaded at startup
-* **on_ready** → confirms connection
-* **on_command_error** → centralized error handling
+**Responsibilities:**
+- Initializes the bot (`commands.Bot`)
+- Loads all cogs
+- Handles global errors
+- Syncs slash commands
+- Starts the bot
 
 ---
 
-# 💰 Core Economy System
+## 💰 Core Economy System
 
-## `bar_economy.py`
-
+### bar_economy.py
 **Role:** Main wallet system
 
-### Features
+**Features:**
+- Balance tracking  
+- Daily, work, and beg earnings  
+- Transfers (`give`)  
+- Robbing system  
+- Admin economy controls  
 
-* Balance tracking
-* Earnings (daily, beg, work)
-* Transfers (`give`)
-* Robbing system
-* Admin controls
-
-### Key Mechanics
-
-* JSON-based persistence
-* Custom cooldown system
-* Randomized rewards
-
-### What You Learn
-
-* State mutation
-* Cooldowns via timestamps
-* Command groups
+**Concepts:**
+- JSON persistence  
+- Cooldown tracking  
+- Randomized rewards  
 
 ---
 
-## `channel_guard.py`
+### channel_guard.py
+**Role:** Command restriction + financial pipeline
 
-**Role:** Global command gate + deduction pipeline
+**Features:**
+- Restricts commands to a specific channel  
+- Applies penalties for misuse  
+- Converts negative balances into debt  
 
-### Features
+**Critical Function:**
+`settle_debt(uid, earned)`
 
-* Restricts commands to specific channel
-* Applies penalties for misuse
-* Tracks and converts negative balance → debt
-
-### Critical Function
-
-**`settle_debt(uid, earned)`**
-
-Handles deductions in order:
-
-1. Debt
-2. Loans
-3. Arbitrary tax
-4. Bracket tax
-
-Returns:
-
-* net earnings
-* total deductions
-
-### Why It Matters
-
-This is the **central financial pipeline** used across multiple cogs.
+Handles deductions in this order:
+1. Debt  
+2. Loans  
+3. Arbitrary tax  
+4. Bracket tax  
 
 ---
 
-# 🔄 Supporting Systems
+## 🔄 Supporting Systems
 
-## `tasks.py`
-
-**Role:** Structured work system
-
-### Features
-
-* Grind command
-* Daily tasks
-* Random tasks
-* Staff-assigned tasks
-
-### Key Ideas
-
-* Event tracking via command completion
-* Shared earnings pipeline
-
-### What You Learn
-
-* Task systems
-* Event-driven updates
+### tasks.py
+Structured work system with:
+- Daily tasks  
+- Random tasks  
+- Staff-assigned jobs  
+- Event-based tracking  
 
 ---
 
-## `savings.py`
-
-**Role:** Bank account system
-
-### Features
-
-* Deposit / withdraw
-* Interest system (daily + weekly)
-* Background loops
-
-### Key Concepts
-
-* `tasks.loop` for scheduled jobs
-* Separate wallet vs savings
+### savings.py
+Bank account system with:
+- Deposits and withdrawals  
+- Daily/weekly interest  
+- Background task loops  
 
 ---
 
-## `banking.py`
-
-**Role:** Loan system
-
-### Features
-
-* Loan requests
-* Approval workflow
-* Automatic repayment
-* Delinquency penalties
-
-### Key Ideas
-
-* Time-based state transitions
-* Integration with earnings pipeline
+### banking.py
+Loan system with:
+- Request and approval flow  
+- Automatic repayment  
+- Delinquency penalties  
 
 ---
 
-## `taxation.py`
-
-**Role:** Tax system
-
-### Features
-
-* Arbitrary tax (manual)
-* Bracket tax (top earners)
-* Community pot
-
-### Key Design
-
-Taxes are applied through shared functions during earnings.
-
-### What You Learn
-
-* Centralized rule systems
-* Percentile-based logic
+### taxation.py
+Tax system including:
+- Manual tax assignments  
+- Bracket-based taxation  
+- Community pot  
 
 ---
 
-# 🧩 Feature Systems
+## 🧩 Feature Systems
 
-## `bar_menu.py`
-
-**Role:** Drink ordering system
-
-### Features
-
-* Menu browsing
-* Pagination
-* Order confirmation UI
-
-### Concepts
-
-* `discord.ui.View`
-* Embed pagination
+### bar_menu.py
+Drink ordering system with:
+- Menu browsing  
+- Pagination  
+- Confirmation UI  
 
 ---
 
-## `chamberlain.py`
-
-**Role:** Service booking system
-
-### Features
-
-* Service browsing
-* Booking workflow
-* Availability tracking
-
-### Concepts
-
-* Multi-step workflows
-* UI confirmations
+### chamberlain.py
+Service booking system with:
+- Availability tracking  
+- Multi-step booking workflow  
+- Commission handling  
 
 ---
 
-## `blackjack.py`
-
-**Role:** Gambling mini-game
-
-### Features
-
-* Stateful game sessions
-* Button-based interaction
-
-### Concepts
-
-* Object-oriented design
-* Game state tracking
+### blackjack.py
+Mini-game system:
+- Stateful sessions  
+- Interactive buttons  
+- Dealer vs player logic  
 
 ---
 
-## `blackmarket.py`
-
-**Role:** Rotating item market
-
-### Features
-
-* Timed drops
-* Inventory system
-* Boost effects
-
-### Concepts
-
-* Timed events
-* Cross-cog effects
+### blackmarket.py
+Dynamic item system:
+- Rotating drops  
+- Inventory management  
+- Boost effects  
 
 ---
 
-## `marketplace.py`
-
-**Role:** Player marketplace
-
-### Features
-
-* Listings (items, services, currency)
-* Approval system
-* Transaction fees
-
-### Concepts
-
-* Validation pipelines
-* Multi-type logic
+### marketplace.py
+Player-driven economy:
+- Listings (items, services, currency)  
+- Approval system  
+- Transaction fees  
 
 ---
 
-# 🧱 Data Model
+## 🧱 Data Model
 
-## Core File: `bar_economy.json`
+### Core File: `bar_economy.json`
 
 Stores:
+- balance  
+- debt  
+- cooldowns  
+- savings  
+- loan data  
 
-* balance
-* debt
-* cooldowns
-* savings
-* loan data
-
-### Important
-
-Many cogs read/write this file.
-
-### Risk
-
-* Overwrites
-* Schema inconsistency
+⚠️ Multiple cogs depend on this file, making it the central data layer.
 
 ---
 
-# 🔗 Cross-Cog Relationships
+## 🔗 Cross-Cog Relationships
 
-### Shared Dependencies
+Key system interactions:
 
-* Economy file used across most cogs
-
-### Key Links
-
-* `channel_guard` → handles deductions
-* `taxation` → plugs into deduction pipeline
-* `banking` → loan repayment via earnings
-* `blackmarket` → boosts affect economy
-* `leaderboard` → aggregates across systems
+- `channel_guard` → handles deductions  
+- `taxation` → applies taxes during earnings  
+- `banking` → loan repayment via earnings  
+- `blackmarket` → boosts affect economy  
+- `leaderboard` → aggregates multiple systems  
 
 ---
 
-# 📊 Aggregation & Utility
+## 📊 Aggregation & Utility
 
-## `leaderboard.py`
-
-**Role:** Data aggregation
-
-### Features
-
-* Rankings
-* User summaries
-
-### Concepts
-
-* Multi-source data processing
+### leaderboard.py
+- Rankings  
+- User summaries  
+- Multi-source aggregation  
 
 ---
 
-## `reviews.py`
-
-**Role:** Review system
-
-### Features
-
-* Gated submissions
-* Modals
-* Cooldowns
-
-### Concepts
-
-* Validation
-* UI input systems
+### reviews.py
+- Gated review system  
+- Modal-based input  
+- Cooldowns and moderation  
 
 ---
 
-## `roles.py`
-
-**Role:** Role automation
-
-### Features
-
-* Verify system
-* Dynamic role commands
-
-### Concepts
-
-* Custom command parsing
-* Role management
+### roles.py
+- Verify system  
+- Dynamic role commands  
 
 ---
 
-## `help.py`
-
-**Role:** Custom help system
-
-### Features
-
-* Permission-based help output
+### econmute.py
+- Blocks economy access for users  
 
 ---
 
-## `econmute.py`
-
-**Role:** Economy restriction system
-
-### Features
-
-* Blocks economy commands
+### whitelist.py
+- Controls allowed servers  
+- Auto-leave system  
 
 ---
 
-## `whitelist.py`
-
-**Role:** Server control
-
-### Features
-
-* Guild allowlist
-* Auto-leave system
+### nya_bully.py
+- Reactive message system  
+- Pattern detection + escalation  
 
 ---
 
-## `nya_bully.py`
-
-**Role:** Reactive novelty system
-
-### Features
-
-* Pattern detection
-* Escalation tracking
+### info.py
+- Static information output  
 
 ---
 
-## `info.py`
-
-**Role:** Static information
-
----
-
-## `id_gen.py`
-
-**Role:** ID generation
-
-### Concepts
-
-* Hashing
-* Random identifiers
+### id_gen.py
+- Unique ID generation using hashing + randomness  
 
 ---
 
-# 🧪 Learning Takeaways
+## 🧪 Learning Takeaways
 
-* Modular architecture with cogs
-* JSON-based persistence
-* Event-driven design
-* Shared-state systems
-* UI interaction patterns
-
----
-
-# ⚠️ Design Tradeoffs
-
-* Heavy JSON usage
-* Shared file risks
-* Repeated permission logic
-* Cross-cog coupling
+This project demonstrates:
+- Modular architecture with cogs  
+- JSON-based persistence  
+- Event-driven programming  
+- Shared-state system design  
+- Discord UI interactions  
 
 ---
 
-# 📚 Recommended Learning Order
+## ⚠️ Design Tradeoffs
 
-1. bot.py
-2. bar_economy.py
-3. channel_guard.py
-4. tasks.py
-5. savings.py
-6. banking.py
-7. taxation.py
-8. bar_menu.py
-9. chamberlain.py
-10. blackjack.py
-11. marketplace.py
-12. blackmarket.py
-13. leaderboard.py
-14. reviews.py
-15. roles.py
-16. help.py
-17. whitelist.py
-18. nya_bully.py
-19. info.py
-20. id_gen.py
+- Heavy reliance on JSON storage  
+- Shared file mutation risks  
+- Repeated permission logic  
+- Cross-cog coupling  
 
 ---
 
-# 🧠 Final Summary
+## 📚 Recommended Learning Order
+
+1. bot.py  
+2. bar_economy.py  
+3. channel_guard.py  
+4. tasks.py  
+5. savings.py  
+6. banking.py  
+7. taxation.py  
+8. bar_menu.py  
+9. chamberlain.py  
+10. blackjack.py  
+11. marketplace.py  
+12. blackmarket.py  
+13. leaderboard.py  
+14. reviews.py  
+15. roles.py  
+16. help.py  
+17. whitelist.py  
+18. nya_bully.py  
+19. info.py  
+20. id_gen.py  
+
+---
+
+## 🧠 Final Summary
 
 This bot is a **multi-system economy engine** where all features interact through shared user data.
 
 If you understand:
-
-* cogs
-* JSON state
-* command flow
-* shared helpers
+- cogs  
+- JSON state  
+- command flow  
+- shared helpers  
 
 You understand the entire project.
